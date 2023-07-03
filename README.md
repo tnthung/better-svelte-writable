@@ -10,6 +10,10 @@ The writable is designed for you to painlessly replace with the native writable 
 $ npm i -D better-svelte-writable
 ```
 
+## Demo
+
+[Svelte RELP](https://svelte.dev/repl/125afbe969a7409ab940f35a293e1e44?version=4.0.1)
+
 ## Usage
 
 The `writable` from this package is a drop-in replacement for the native writable. It provides some additional features which are listed below.
@@ -25,7 +29,7 @@ const {
   update,       // an update    function just like the native writable
   subscribe,    // a  subscribe function just like the native writable
 
-  get,          // a method for getting the current value without invoking the update
+  get,          // a  method for getting the current value without invoking the update
   previous,     // an array which contains tracked previous values that can be used a store
 } = writable(0);
 ```
