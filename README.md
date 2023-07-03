@@ -27,10 +27,10 @@ const store = writable(0);
 const {
   set,          // a  set       function just like the native writable
   update,       // an update    function just like the native writable
-  subscribe,    // a  subscribe function just like the native writable
 
   get,          // a  method for getting the current value without invoking the update
   previous,     // an array which contains tracked previous values that can be used a store
+  subscribe,    // a  method for subscribing to the value changes
 } = writable(0);
 ```
 
