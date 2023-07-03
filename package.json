@@ -25,7 +25,7 @@
   "keywords": [
     "svelte",
     "sveltejs",
-    "writable",
+    "writable"
   ],
 	"peerDependencies": {
 		"svelte": "^4.0.0"
