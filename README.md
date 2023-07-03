@@ -29,8 +29,8 @@ import { writable } from 'better-svelte-writable';
 const store = writable(0);
 
 const {
-  set,          // a  set       function just like the native writable
-  update,       // an update    function just like the native writable
+  set,          // a  set    function just like the native writable
+  update,       // an update function just like the native writable
 
   get,          // a  method for getting the current value without invoking the update
   previous,     // an array which contains tracked previous values that can be used a store
@@ -43,9 +43,9 @@ Others are staying the same as the native writable.
 
 ### `get`
 
-The pain with the native `writable` is when you just need to peek the current value, the best you can do is through the `update` function and return the old value, or by using the provided `get` method in `svelte/store`.This is not only verbose but also not intuitive.
+The pain with the native `writable` is when you just need to peek the current value, the best you can do is through the `update` function and return the old value, or by using the provided `get` method in `svelte/store`. This is not only verbose but also not intuitive.
 
-The solution we provide is a native `get` method inside the return `BetterWritable<T>` object which is much straight forward.
+The solution we provide is a native `get` method inside the return `BetterWritable<T>` object which is much straight forward and performance friendly.
 
 ```typescript
 import { writable } from 'better-svelte-writable';
@@ -105,7 +105,7 @@ store.subscribe((newValue, [lastValue]) => {
 
 ### `start`
 
-`start` function is a function which is will be called when the **first subscriber is added** *(not necessarily the first time)*.\
+`start` is a function which is will be called when the **first subscriber is added** *(not necessarily the first time)*.\
 Which may return a function which will be called when the **last subscriber is removed** *(not necessarily the last time)*.
 
 The default value of `start` is `() => {}`.
