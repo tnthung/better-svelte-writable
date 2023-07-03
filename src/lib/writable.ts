@@ -5,7 +5,12 @@ import type {
 } from "svelte/store";
 
 
-type Subscriber<T> = (value: T, oldValues: T[]) => void;
+type QuantifiedTuple<T, N extends number, A extends T[] = []> =
+  A["length"] extends N ? A : QuantifiedTuple<T, N, [...A, T]>;
+
+
+type Subscriber<T, N extends number> =
+  (value: T, oldValues: QuantifiedTuple<T, N>) => void;
 
 
 type StartStopNotifier<T> = (
@@ -15,39 +20,39 @@ type StartStopNotifier<T> = (
 
 
 // stolen from svelte/store's private types "SubscribeInvalidateTuple<T>" :D
-type SITuple<T> = [Subscriber<T>, Invalidator<T>];
+type SITuple<T, N extends number> = [Subscriber<T, N>, Invalidator<T>];
 
 
-type WritableConfig<T> = {
-  start?: StartStopNotifier<T>,           // start/stop notifier, default: () => {}
-  isEqual?: (a: T, b: T) => boolean;      // custom equality function, default: (a, b) => a === b
-  forceFire?: boolean;                    // force fire on set and update, regardless of value change, default: false
-  trackerCount?: number;                  // number of previous values to track, default: 0
+type WritableConfig<T, N extends number> = {
+  start       ?: StartStopNotifier<T>,    // start/stop notifier, default: () => {}
+  isEqual     ?: (a: T, b: T) => boolean; // custom equality function, default: (a, b) => a === b
+  forceFire   ?: boolean;                 // force fire on set and update, regardless of value change, default: false
+  trackerCount?: N;                       // number of previous values to track, default: 0
 };
 
 
-interface BetterReadable<T> {
-  subscribe: (this: void, run: Subscriber<T>, invalidate?: Invalidator<T>) => Unsubscriber;
+interface BetterReadable<T, N extends number> {
+  subscribe: (this: void, run: Subscriber<T, N>, invalidate?: Invalidator<T>) => Unsubscriber;
 };
 
 
-interface BetterWritable<T> extends BetterReadable<T> {
-  get      : () => T;
-  set      : (value: T) => void;
-  update   : (updater: Updater<T>) => void;
-  previous : BetterReadable<T>[];
+interface BetterWritable<T, N extends number> extends BetterReadable<T, N> {
+  get     : () => T;
+  set     : (value: T) => void;
+  update  : (updater: Updater<T>) => void;
+  previous: QuantifiedTuple<BetterReadable<T, N>, N>;
 };
 
 
 const noop = () => {};
 
-const subCallbackQueue: [Subscriber<any>, any, any[]][] = [];
+const subCallbackQueue: [Subscriber<any, any>, any, any[]][] = [];
 
 
-export const writable = <T> (
+export const writable = <T, N extends number = 0> (
   initialValue: T,
-  config: WritableConfig<T> = {}
-): BetterWritable<T> => {
+  config: WritableConfig<T, N> = {}
+): BetterWritable<T, N> => {
   const {
     start        = noop,
     isEqual      = (a: T, b: T) => a === b,
@@ -59,14 +64,14 @@ export const writable = <T> (
   let stop: (() => void) | null = null;
 
 
-  let values     : T[]                 = [];
-  let trackers   : BetterReadable<T>[] = [];
-  let subscribers: Set<SITuple<T>>[]   = [];
-  let subCount   : number              = 0;
+  let values     : T[]                    = [];
+  let trackers   : BetterReadable<T, N>[] = [];
+  let subscribers: Set<SITuple<T, N>>[]   = [];
+  let subCount   : number                 = 0;
 
 
   function set(v: T) {
-    if (isEqual(values[0], v) && !forceFire)
+    if (!forceFire && isEqual(values[0], v))
       return;
 
     values.unshift(v);
@@ -87,7 +92,7 @@ export const writable = <T> (
     // i just stole it from svelte/store :D
     if (runQueue) {
       subCallbackQueue.forEach(
-        ([run, n, o]) => run(n, o));
+        ([run, n, o]) => run(n, o as any));
       subCallbackQueue.length = 0;
     }
   };
@@ -100,14 +105,14 @@ export const writable = <T> (
     subscribers.push(new Set());
     trackers   .push({
       subscribe: (run, invalidate = noop) => {
-        const sub: SITuple<T> = [run, invalidate];
+        const sub: SITuple<T, N> = [run, invalidate];
         subscribers[i].add(sub);
         subCount++;
 
         if (subCount === 1)
           stop = start(set, update) || noop;
 
-        run(values[i], values.slice(1));
+        run(values[i], values.slice(1) as QuantifiedTuple<T, N>);
 
         return () => {
           subscribers[i].delete(sub);
@@ -124,7 +129,7 @@ export const writable = <T> (
 
   return {
     get      : () => values[0],
-    previous : trackers.slice(1),
+    previous : trackers.slice(1) as QuantifiedTuple<BetterReadable<T, N>, N>,
     subscribe: trackers[0].subscribe,
 
     set,
