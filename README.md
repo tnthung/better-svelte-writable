@@ -3,7 +3,6 @@
 [![npm version](http://img.shields.io/npm/v/better-svelte-writable.svg)](https://www.npmjs.com/package/better-svelte-writable)
 [![npm downloads](https://img.shields.io/npm/dm/better-svelte-writable.svg)](https://www.npmjs.com/package/better-svelte-writable)
 ![license](https://img.shields.io/npm/l/better-svelte-writable)
-[![size](https://img.shields.io/bundlephobia/min/better-svelte-writable)](https://bundlephobia.com/result?p=better-svelte-writable)
 
 This package provides a type-safe writable which gives you more control over the container.
 
