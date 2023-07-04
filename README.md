@@ -6,7 +6,7 @@
 
 This package provides a type-safe writable which gives you more control over the container.
 
-The writable is designed for you to painlessly replace with the native writable when you are ready to do so.
+The writable is designed for you to painlessly replace with the native writable.
 
 ## Installation
 
@@ -29,17 +29,18 @@ import { writable } from 'better-svelte-writable';
 const store = writable(0);
 
 const {
-  set,          // a  set    function just like the native writable
-  update,       // an update function just like the native writable
+  // Remaining the same as the native writable
+  set,
+  update,
 
+  // New members
   get,          // a  method for getting the current value without invoking the update
-  previous,     // an array which contains tracked previous values that can be used a store
+  previous,     // an tuple which contains tracked previous values that can be used a store
+
+  // Modified
   subscribe,    // a  method for subscribing to the value changes
 } = writable(0);
 ```
-
-The new members are `get`, `previous`, and the `subscribe` method is modified.
-Others are staying the same as the native writable.
 
 ### `get`
 
@@ -105,11 +106,6 @@ store.subscribe((newValue, [lastValue]) => {
 
 ### `start`
 
-`start` is a function which is will be called when the **first subscriber is added** *(not necessarily the first time)*.\
-Which may return a function which will be called when the **last subscriber is removed** *(not necessarily the last time)*.
-
-The default value of `start` is `() => {}`.
-
 ```typescript
 type setter  = (value: T) => void;
 type updater = (fn: (value: T) => T) => T;
@@ -117,33 +113,107 @@ type updater = (fn: (value: T) => T) => T;
 type startFunction = (set: setter, update: updater) => (void | () => void);
 ```
 
+`start` is a function which is will be called when the **first subscriber is added** *(not necessarily the first time)*.\
+Which may return a function which will be called when the **last subscriber is removed** *(not necessarily the last time)*.
+
+The default value of `start` is `() => {}`.
+
+```typescript
+import { writable } from 'better-svelte-writable';
+
+
+const store = writable(0, {
+  start: (set, update) => {
+    console.log('start');
+    return () => console.log('end');
+  },
+});
+
+
+let tmp1 = store.subscribe(() => {}); // console: start
+let tmp2 = store.subscribe(() => {});
+let tmp3 = store.subscribe(() => {});
+
+tmp2();
+tmp3();
+tmp1(); // console: end
+
+
+let tmp4 = store.subscribe(() => {}); // console: start
+
+tmp4(); // console: end
+```
+
 ### `isEqual`
+
+```typescript
+type isEqualFunction = (currentValue: T, newValue: T) => boolean;
+```
 
 `isEqual` is the function which been used to compare the previous value with the new value, which
 can be customized to fit your needs. This function will only be invoked when `forceFire` is `false`.
 
 The default value of `isEqual` is `(currentValue, newValue) => currentValue === newValue`.
 
-```typescript
-type isEqualFunction = (currentValue: T, newValue: T) => boolean;
-```
-
 ### `forceFire`
+
+```typescript
+type forceFireOption = boolean;
+```
 
 `forceFire` indicates whether the callbacks will be called even if the value is not changed. If this option is set to `true`, the equality check will be skipped.
 
 The default value of `forceFire` is `false`.
 
 ```typescript
-type forceFireOption = boolean;
+import { writable } from 'better-svelte-writable';
+
+
+{
+  const store = writable(0, { forceFire: true });
+
+  store.subscribe(() => console.log('fire'));
+
+  store.set(1); // console: fire
+  store.set(1); // console: fire
+  store.set(1); // console: fire
+}
+
+{
+  const store = writable(0, { forceFire: false });
+
+  store.subscribe(() => console.log('fire'));
+
+  store.set(1); // console: fire
+  store.set(1);
+  store.set(1);
+}
 ```
 
 ### `trackerCount`
+
+```typescript
+type trackerCountOption = number;
+```
 
 `trackerCount` decides how many previous values will be tracked. If this option is set to `0`, the previous values will not be tracked.
 
 The default value of `trackerCount` is `0`.
 
+
 ```typescript
-type trackerCountOption = number;
+import { writable } from 'better-svelte-writable';
+
+
+const store = writable(0, { trackerCount: 1 });
+
+store.subscribe((n, [last, penultimate]) =>
+  console.log(last, penultimate));
+
+
+const last        = store.previous[0];
+const penultimate = store.previous[1];
+
+last       .subscribe(n => console.log('last'       , n));
+penultimate.subscribe(n => console.log('penultimate', n));
 ```
