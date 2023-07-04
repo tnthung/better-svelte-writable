@@ -61,7 +61,14 @@ export const writable = <T, N extends number = 0> (
   } = config;
 
 
+  // stop notifier
   let stop: (() => void) | null = null;
+
+
+  // deep clone
+  const copy = <T> (v: T) => (
+    typeof v === "object"
+  ) ? structuredClone(v) : v;
 
 
   let values     : T[]                    = [];
@@ -74,7 +81,7 @@ export const writable = <T, N extends number = 0> (
     if (!forceFire && isEqual(values[0], v))
       return;
 
-    values.unshift(v);
+    values.unshift(copy(v));
     values = values.slice(0, trackerCount+1);
 
     // store not ready
@@ -96,6 +103,7 @@ export const writable = <T, N extends number = 0> (
       subCallbackQueue.length = 0;
     }
   };
+
 
   function update(fn: Updater<T>) { set(fn(values[0])); };
 
