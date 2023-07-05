@@ -18,6 +18,6 @@
 <div>new {$count}</div>
 <div>old {$prev1}</div>
 
-<button on:click={() => $count++}>+</button>
-<button on:click={() => count.set(0)}>reset</button>
-<button on:click={() => $count--}>-</button>
+<button on:click={() => $count++}>  +  </button>
+<button on:click={() => $count=0}>reset</button>
+<button on:click={() => $count--}>  -  </button>
