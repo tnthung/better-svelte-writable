@@ -67,7 +67,8 @@ export const writable = <T, N extends number = 0> (
 
   // deep clone
   const copy = <T> (v: T) => (
-    typeof v === "object"
+    typeof v === "object" &&
+    trackerCount > 0
   ) ? structuredClone(v) : v;
 
 
