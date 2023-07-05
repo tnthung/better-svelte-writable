@@ -9,11 +9,11 @@ type QuantifiedTuple<T, N extends number, A extends T[] = []> =
   A["length"] extends N ? A : QuantifiedTuple<T, N, [...A, T]>;
 
 
-type Subscriber<T, N extends number> =
+export type Subscriber<T, N extends number> =
   (value: T, oldValues: QuantifiedTuple<T, N>) => void;
 
 
-type StartStopNotifier<T> = (
+export type StartStopNotifier<T> = (
   set   : (v: T         ) => void,
   update: (f: Updater<T>) => void
 ) => (void | (() => void))
@@ -23,7 +23,7 @@ type StartStopNotifier<T> = (
 type SITuple<T, N extends number> = [Subscriber<T, N>, Invalidator<T>];
 
 
-type WritableConfig<T, N extends number> = {
+export type WritableConfig<T, N extends number> = {
   start       ?: StartStopNotifier<T>,    // start/stop notifier, default: () => {}
   isEqual     ?: (a: T, b: T) => boolean; // custom equality function, default: (a, b) => a === b
   forceFire   ?: boolean;                 // force fire on set and update, regardless of value change, default: false
@@ -31,12 +31,12 @@ type WritableConfig<T, N extends number> = {
 };
 
 
-interface BetterReadable<T, N extends number> {
+export interface BetterReadable<T, N extends number> {
   subscribe: (this: void, run: Subscriber<T, N>, invalidate?: Invalidator<T>) => Unsubscriber;
 };
 
 
-interface BetterWritable<T, N extends number> extends BetterReadable<T, N> {
+export interface BetterWritable<T, N extends number> extends BetterReadable<T, N> {
   get     : () => T;
   set     : (value: T) => void;
   update  : (updater: Updater<T>) => void;
