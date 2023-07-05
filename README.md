@@ -166,6 +166,8 @@ If the `persist` option is non-falsy, the value will also be synced across tabs.
 
 > If the `key` already exists, **ALL** the other options will be ignored.
 
+> The `initialValue` will be the fallback value if the `key` never been used.
+
 The default value of `key` is `undefined`.
 
 ```svelte
@@ -290,8 +292,6 @@ type persistOption<T> = boolean | {
 
 > If `persist` is non-falsy, the `key` option must be set.
 
-> The `initialValue` will be the fallback value when the value is not found in the storage.
-
 > The value in the storage is not yet been verified, it's possible the value does not match the type of `T`.
 
 `persist` indicates whether or how will the value be stored in the storage.
@@ -325,6 +325,12 @@ The default value of `persist` is `false`.
 ```
 
 # Changelog
+
+## 0.1.1
+
+### Fixes
+
+1. The note `The 'initialValue' will be the fallback...` is moved to the `key` option below.
 
 ## 0.1.0
 
