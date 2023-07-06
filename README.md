@@ -23,11 +23,87 @@ $ npm i -D better-svelte-writable
 
 [Svelte RELP](https://svelte.dev/repl/125afbe969a7409ab940f35a293e1e44?version=4.0.1)
 
+## Highlight
+
+### Previous tracking
+
+This package letting you to keeps track as much as old values you need.
+[[Option: `trackerCount`]](#trackercount)
+
+### Value syncing
+
+We provided native value syncing mechanism and it even works cross tabs.
+[[Option: `key`]](#key)
+[[Option: `persist`]](#persist)
+
+### Simple getter
+
+A light-weight getter is built-in in the `BetterWritable<T, N>` object.
+[[Method: `get`]](#get)
+
+### Type-safety
+
+The available previous tracker is strictly sized to `trackerCount`.
+
+```typescript
+import { writable } from "better-svelte-writable";
+
+
+const store = writable(0, { trackerCount: 2 });
+
+{
+  const [
+    last,
+    penultimate,
+  ] = store.previous;
+
+  store.subscribe((current, [last, penultimate]) => {});
+} // works
+
+{
+  const [
+    last,
+    penultimate,
+    antepenultimate,
+  ] = store.previous;
+
+  store.subscribe((current, [last, penultimate, antepenultimate]) => {});
+} // ts(2493): Tuple type '[...]' of length '2' has no element at index '2'.
+```
+
+If you're using persistent writable, and the Zod schema is provided, the type of the value will be inferred from the schema.
+
+```typescript
+import { writable } from "better-svelte-writable";
+
+
+{
+  const store = writable(0, {
+    key: "test1",
+    persist: {
+      schema: z.number(),
+    }
+  });
+} // works
+
+{
+  const store = writable(0, {
+    key: "test2",
+    persist: {
+      schema: z.string(),
+    }
+  });
+} // ts(2345): Argument of type 'number' is not assignable to parameter of type 'string'.
+```
+
+
 ## Usage
 
 The `writable` from this package is a drop-in replacement for the native writable. It provides some additional features which are listed below.
 
 > Signature: `writable<T, N>(initialValue: T, options?: Options<T, N>): BetterWritable<T, N>`
+
+> `writable(value as T)` is preferred so types can be inferred automatically.
 
 ```typescript
 import { writable } from 'better-svelte-writable';
@@ -139,7 +215,7 @@ The default value of `trackerCount` is `0`.
 
 
 ```typescript
-import { writable } from 'better-svelte-writable';
+import { writable } from "better-svelte-writable";
 
 
 const store = writable(0, { trackerCount: 1 });
@@ -151,8 +227,8 @@ store.subscribe((n, [last, penultimate]) =>
 const last        = store.previous[0];
 const penultimate = store.previous[1];
 
-last       .subscribe(n => console.log('last'       , n));
-penultimate.subscribe(n => console.log('penultimate', n));
+last       .subscribe(n => console.log("last"       , n));
+penultimate.subscribe(n => console.log("penultimate", n));
 ```
 
 ### `key`
@@ -167,6 +243,9 @@ If the `persist` option is non-falsy, the value will also be synced across tabs.
 > If the `key` already exists, **ALL** the other options will be ignored.
 
 > The `initialValue` will be the fallback value if the `key` never been used.
+
+> There's no way stopping you from using 2 `writable` with same `key` but different `type T`.\
+  You need to make sure the type is the same manually.
 
 The default value of `key` is `undefined`.
 
@@ -304,8 +383,17 @@ which will be synced across tabs with the `writable`s with the same `key`.
 1. `storage`: The storage to be used.\
    The default value of `storage` is `localStorage`.
 
-2. `serializer`: The serializer to be used.\
-    The default value of `serializer` is `JSON`.
+1. `serializer`: The serializer to be used.\
+   The default value of `serializer` is `JSON`.
+
+1. `zodType`: The validator created with Zod.\
+   The default value of `zodType` is `undefined`.
+
+1. `overwrite`: Whether the value in the storage will be overwritten when invalid.\
+   &gt; `"always" ` Overwritten whenever storage value is invalid\
+   &gt; `"initial"` Only overwrite when the writable is created\
+   &gt; `"never"  `   Never overwrite\
+   The default value of `overwrite` is `"never"`.
 
 The default value of `persist` is `false`.
 
@@ -326,11 +414,25 @@ The default value of `persist` is `false`.
 
 # Changelog
 
+## 0.1.2
+
+### Change
+
+1. Add `Highlight` section in doc.
+1. Enhance the type inference.
+
+### New Features
+
+1. `persist` can accept a zod schema for verifying the old value in storage.
+1. `type T` can be inferred from the zod schema provided in `persist`.
+
+
 ## 0.1.1
 
 ### Fixes
 
 1. The note `The 'initialValue' will be the fallback...` is moved to the `key` option below.
+
 
 ## 0.1.0
 
