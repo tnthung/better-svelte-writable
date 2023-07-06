@@ -34,8 +34,8 @@ type SITuple<T, N extends number> = [Subscriber<T, N>, Invalidator<T>];
 // forceFire     : force fire on set and update, regardless of value change,  default: false
 // trackerCount  : number of previous values to track,                        default: 0
 // persist       : persist to storage,                                        default: false
+//     schema    : storage type,                                              default: localStorage
 //     storage   : for verifying the value from storage,                      default: undefined
-//     zodType   : storage type,                                              default: localStorage
 //     overwrite : if overwrite when initial sync failed verification,        default: false
 //     serializer: serializer for syncing,                                    default: JSON
 export type WritableConfig<
