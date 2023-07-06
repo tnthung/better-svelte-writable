@@ -273,7 +273,7 @@ type isEqualFunction = (currentValue: T, newValue: T) => boolean;
 ```
 
 `isEqual` is the function which been used to compare the previous value with the new value, which
-can be customized to fit your needs. This function will only be invoked when `forceFire` is `false`.
+can be customized to fit your needs.
 
 The default value of `isEqual` is `(currentValue, newValue) => currentValue === newValue`.
 
@@ -284,7 +284,7 @@ type forceFireOption = boolean;
 ```
 
 `forceFire` indicates whether the callbacks will be called even if the value is not changed.
-If this option is set to `true`, the equality check will be skipped.
+If this option is set to `true`, the equality result of `isEqual` will be ignored.
 
 The default value of `forceFire` is `false`.
 
@@ -364,7 +364,9 @@ interface Serializer<T> {
 };
 
 type persistOption<T> = boolean | {
+  schema    ?: ZodType;
   storage   ?: Storage;
+  overwrite ?: boolean;
   serializer?: Serializer<T>;
 };
 ```
@@ -386,8 +388,8 @@ which will be synced across tabs with the `writable`s with the same `key`.
 1. `serializer`: The serializer to be used.\
    The default value of `serializer` is `JSON`.
 
-1. `zodType`: The validator created with Zod.\
-   The default value of `zodType` is `undefined`.
+1. `schema`: The validator created with Zod.\
+   The default value of `schema` is `undefined`.
 
 1. `overwrite`: Whether the value in the storage will be overwritten when invalid.\
    &gt; `"always" ` Overwritten whenever storage value is invalid\
@@ -413,6 +415,13 @@ The default value of `persist` is `false`.
 ```
 
 # Changelog
+
+## 0.1.3
+
+### Fixes
+
+1. The documentations typos.
+
 
 ## 0.1.2
 
