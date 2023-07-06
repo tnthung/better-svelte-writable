@@ -86,11 +86,12 @@ export interface Serializer<T> {
 };
 
 
-const noop = () => {};
+const eq  = <T>(a: T, b: T) => a === b;
+const nop = () => {};
 
-const subCallbackQueue: [Subscriber<any, any>, any, any[]][] = [];
 
-const keyedWritableMap = new Map<string, BetterWritable<any, any>>();
+const subCallbackQueue: [Subscriber<any, any>, any, any[]][]  = [];
+const keyedWritableMap: Map<string, BetterWritable<any, any>> = new Map();
 
 
 export const writable = <
@@ -109,8 +110,8 @@ export const writable = <
   const {
     key,
 
-    start        = noop,
-    isEqual      = (a: AT, b: AT) => a === b,
+    start        = nop,
+    isEqual      = eq,
     forceFire    = false,
     trackerCount = 0,
   } = config;
@@ -286,7 +287,7 @@ export const writable = <
     values     .push(initialValue);
     subscribers.push(new Set());
     trackers   .push({
-      subscribe: (run, invalidate = noop) => {
+      subscribe: (run, invalidate=nop) => {
         const sub: SITuple<AT, N> = [run, invalidate];
 
         // add the subscriber and increment the count
@@ -295,7 +296,7 @@ export const writable = <
 
         // set the stop function and call start
         if (subCount === 1)
-          stop = start(set, update) || noop;
+          stop = start(set, update) || nop;
 
         // run the callback once
         run(values[i], values.slice(1) as QuantifiedTuple<T, N>);
