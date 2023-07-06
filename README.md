@@ -13,6 +13,31 @@ There are 3 problems this package is addressing:
 1. Peeking the current value is not intuitive and verbose.
 1. Syncing the value between multiple `writable`s is not easy.
 
+
+## Table of Contents
+
+1. [Installation                ](#installation)
+1. [Demo                        ](#demo)
+1. [Highlight                   ](#highlight)
+    1. [Previous tracking       ](#previous-tracking)
+    1. [Value syncing           ](#value-syncing)
+    1. [Simple getter           ](#simple-getter)
+    1. [Type-safety             ](#type-safety)
+1. [Usage                       ](#usage)
+    1. [`get`                   ](#get)
+    1. [`previous`              ](#previous)
+    1. [`isPersistent`          ](#ispersistent)
+    1. [`subscribe`             ](#subscribe)
+1. [Options                     ](#options)
+    1. [`trackerCount`          ](#trackercount)
+    1. [`key`                   ](#key)
+    1. [`isEqual`               ](#isequal)
+    1. [`forceFire`             ](#forcefire)
+    1. [`start`                 ](#start)
+    1. [`persist`               ](#persist)
+1. [Changelog                   ](#changelog)
+
+
 ## Installation
 
 ```bash
@@ -421,6 +446,8 @@ The default value of `persist` is `false`.
 ### Fixes
 
 1. The documentations typos.
+1. Add table of contents in README.
+1. Do some formatting.
 
 
 ## 0.1.2
