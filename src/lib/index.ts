@@ -3,6 +3,7 @@ export { writable } from "./writable.js";
 
 export type {
   Subscriber,
+  Serializer,
   WritableConfig,
   BetterReadable,
   BetterWritable,
