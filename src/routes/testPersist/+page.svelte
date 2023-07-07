@@ -8,7 +8,7 @@
 
 
 <div>Count1: {$count1}</div>
-<div>Count2: {$count1}</div>
+<div>Count2: {$count2}</div>
 
 <button on:click={() => $count1++}>  +  </button>
 <button on:click={() => $count1=0}>reset</button>
