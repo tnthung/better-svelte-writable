@@ -6,7 +6,7 @@
   const { previous: [prev1] } = count;
 
 
-  count.subscribe((n, [o1, o2]) =>
+  count.subscribe((n, o1, o2) =>
     console.log(`${o2} -> ${o1} -> ${n}`));
 </script>
 

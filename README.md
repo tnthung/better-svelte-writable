@@ -82,7 +82,7 @@ const store = writable(0, { trackerCount: 2 });
     penultimate,
   ] = store.previous;
 
-  store.subscribe((current, [last, penultimate]) => {});
+  store.subscribe((current, last, penultimate) => {});
 } // works
 
 {
@@ -92,7 +92,7 @@ const store = writable(0, { trackerCount: 2 });
     antepenultimate,
   ] = store.previous;
 
-  store.subscribe((current, [last, penultimate, antepenultimate]) => {});
+  store.subscribe((current, last, penultimate, antepenultimate) => {});
 } // ts(2493): Tuple type '[...]' of length '2' has no element at index '2'.
 ```
 
@@ -124,11 +124,17 @@ import { writable } from "better-svelte-writable";
 
 ## Usage
 
-The `writable` from this package is a drop-in replacement for the native writable. It provides some additional features which are listed below.
+The `writable` from this package is a drop-in replacement for the native writable.
+It provides some additional features which are listed below.
+By simply replace `svelte/store` with `better-svelte-writable` in import statement,
+you can unlock the power of this package.
 
-> Signature: `writable<T, N>(initialValue: T, options?: Options<T, N>): BetterWritable<T, N>`
+```diff
+- import { writable } from 'svelte/store';
++ import { writable } from 'better-svelte-writable';
+```
 
-> `writable(value as T)` is preferred so types can be inferred automatically.
+> `writable(value as T)` is preferred, so types can be inferred automatically.
 
 ```typescript
 import { writable } from 'better-svelte-writable';
@@ -144,6 +150,7 @@ const {
   // New members
   get,          // a  method for getting the current value without invoking the update
   previous,     // an tuple which contains tracked previous values that can be used a store
+                // only available when `trackerCount` is provided greater than 0
   isPersistent, // a  boolean value indicates whether the value is persisted in storage
 
   // Modified
@@ -173,6 +180,8 @@ Just like `Readable<T>` from `svelte/store`, the `BetterReadable<T>` object also
 By prefixing `$`, you can subscribe to the value changes.
 
 > The length of the tuple is determined by the `trackerCount` option.
+
+> Only when `trackerCount` is greater than 0, the `previous` will be available.
 
 ```svelte
 <script lang="ts">
@@ -208,18 +217,21 @@ console.log(store2.isPersistent); // false
 
 ### `subscribe`
 
-The native `subscribe` method has one major problem, which has no way to found the old value when the callback is invoked. So the `subscribe` method we provide gives you the ability to see the old value(s). The second optional argument takes in a tuple oldValues been tracked.
+The native `subscribe` method has one major problem, which has no way to found the old value
+when the callback is invoked. So the `subscribe` method we provide gives you the ability to
+see the old value(s). The first arg is the current value and followed by the previous values.
 
 > The length of the tuple is determined by the `trackerCount` option.
 
 ```typescript
 import { writable } from 'better-svelte-writable';
 
+
 const store = writable(0, { trackerCount: 1 });
 
-store.subscribe((newValue, [lastValue]) => {
-  console.log(lastValue);
-  console.log(newValue);
+store.subscribe((current, last) => {
+  console.log(last);
+  console.log(current);
 });
 ```
 
@@ -245,7 +257,7 @@ import { writable } from "better-svelte-writable";
 
 const store = writable(0, { trackerCount: 1 });
 
-store.subscribe((n, [last, penultimate]) =>
+store.subscribe((n, last, penultimate) =>
   console.log(last, penultimate));
 
 
@@ -448,11 +460,18 @@ The default value of `persist` is `false`.
 1. The documentations typos.
 1. Add table of contents in README.
 1. Do some formatting.
+1. Test route typo.
 
+### Breaking Changes
+
+1. The `subscribe` function signature is changed. Spread arguments is now
+   used to replace the old values tuple.
+1. The `previous` field will only be available when `trackerCount` is
+   greater than 0.
 
 ## 0.1.2
 
-### Change
+### Changes
 
 1. Add `Highlight` section in doc.
 1. Enhance the type inference.

@@ -10,12 +10,24 @@ import type {
 } from "svelte/store";
 
 
+type CapPositive<N extends number> =
+  `${N}` extends `-${string}` ? 0 : N;
+
+
 type QuantifiedTuple<T, N extends number, A extends T[] = []> =
-  A["length"] extends N ? A : QuantifiedTuple<T, N, [...A, T]>;
+  CapPositive<N> extends infer U
+    ? U extends number
+      ? A["length"] extends U
+        ? A
+        : QuantifiedTuple<T, N, [T, ...A]>
+      : never
+    : never;
 
 
 export type Subscriber<T, N extends number = 0> =
-  (value: T, oldValues: QuantifiedTuple<T, N>) => void;
+  QuantifiedTuple<T, N> extends []
+    ? (value: T                                     ) => void
+    : (value: T, ...oldValues: QuantifiedTuple<T, N>) => void;
 
 
 export type StartStopNotifier<T> = (
@@ -66,18 +78,20 @@ export type WritableConfig<
 });
 
 
-export interface BetterReadable<T, N extends number = 0> {
+export type BetterReadable<T, N extends number = 0> = {
   subscribe: (this: void, run: Subscriber<T, N>, invalidate?: Invalidator<T>) => Unsubscriber;
 };
 
 
-export interface BetterWritable<T, N extends number = 0> extends BetterReadable<T, N> {
-  get         : () => T;
-  set         : (value: T) => void;
-  update      : (updater: Updater<T>) => void;
-  previous    : QuantifiedTuple<BetterReadable<T, N>, N>;
-  isPersistent: boolean;
-};
+export type BetterWritable<T, N extends number = 0> =
+  BetterReadable<T, N> & {
+    get         : () => T;
+    set         : (value: T) => void;
+    update      : (updater: Updater<T>) => void;
+    isPersistent: boolean;
+  } & (QuantifiedTuple<any, N> extends [] ? {} : {
+    previous    : QuantifiedTuple<BetterReadable<T, N>, N>;
+  });
 
 
 export interface Serializer<T> {
@@ -90,8 +104,11 @@ const eq  = <T>(a: T, b: T) => a === b;
 const nop = () => {};
 
 
-const subCallbackQueue: [Subscriber<any, any>, any, any[]][]  = [];
-const keyedWritableMap: Map<string, BetterWritable<any, any>> = new Map();
+type Queue = [((v: any) => void) | ((v: any, ...o: any[]) => void), any, any[]][]
+type Keyed = Map<string, BetterWritable<any, any>>
+
+const subCallbackQueue: Queue = [];
+const keyedWritableMap: Keyed = new Map();
 
 
 export const writable = <
@@ -266,14 +283,18 @@ export const writable = <
         inv(values[i])
 
         // push the callback into the queue
-        subCallbackQueue.push([run, values[i], values.slice(1)]);
+        subCallbackQueue.push([
+          run as any,
+          values[i],
+          values.slice(1)
+        ]);
       }));
 
     // i really don't know the reason for this
     // i just stole it from svelte/store :D
     if (runQueue) {
       subCallbackQueue.forEach(
-        ([run, n, o]) => run(n, o as any));
+        ([run, n, o]) => run(n, ...o));
       subCallbackQueue.length = 0;
     }
   };
@@ -299,7 +320,7 @@ export const writable = <
           stop = start(set, update) || nop;
 
         // run the callback once
-        run(values[i], values.slice(1) as QuantifiedTuple<T, N>);
+        run(values[i], ...values.slice(1) as QuantifiedTuple<T, N>);
 
         return () => {
           // remove the subscriber and decrement the count
@@ -319,12 +340,15 @@ export const writable = <
 
   const store: BetterWritable<AT, N> = {
     get         : () => values[0],
-    previous    : trackers.slice(1) as QuantifiedTuple<BetterReadable<T, N>, N>,
     subscribe   : trackers[0].subscribe,
     isPersistent: persist !== false,
 
     set,
     update,
+
+    ...(trackerCount <= 0 ? {} : {
+      previous  : trackers.slice(1),
+    }),
   };
 
 
