@@ -453,7 +453,7 @@ The default value of `persist` is `false`.
 
 # Changelog
 
-## 0.1.3
+## 0.2.0
 
 ### Fixes
 
