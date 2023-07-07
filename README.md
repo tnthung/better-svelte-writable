@@ -410,8 +410,6 @@ type persistOption<T> = boolean | {
 
 > If `persist` is non-falsy, the `key` option must be set.
 
-> The value in the storage is not yet been verified, it's possible the value does not match the type of `T`.
-
 `persist` indicates whether or how will the value be stored in the storage.
 If this option is set to `false`, the value will only be stored in current tab.
 Otherwise, the value will be stored in the storage,
@@ -425,13 +423,13 @@ which will be synced across tabs with the `writable`s with the same `key`.
 1. `serializer`: The serializer to be used.\
    The default value of `serializer` is `JSON`.
 
-1. `schema`: The validator created with Zod.\
+1. `schema`: The validator checking if value is invalid created with Zod.\
    The default value of `schema` is `undefined`.
 
 1. `overwrite`: Whether the value in the storage will be overwritten when invalid.\
    &gt; `"always" ` Overwritten whenever storage value is invalid\
-   &gt; `"initial"` Only overwrite when the writable is created\
-   &gt; `"never"  `   Never overwrite\
+   &gt; `"initial"` Only overwrite when value is invalid on creation\
+   &gt; `"never"  ` Never overwrite\
    The default value of `overwrite` is `"never"`.
 
 The default value of `persist` is `false`.
@@ -452,6 +450,13 @@ The default value of `persist` is `false`.
 ```
 
 # Changelog
+
+## 0.2.1
+
+### Fixes
+
+1. The documentations typos.
+
 
 ## 0.2.0
 
