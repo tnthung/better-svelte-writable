@@ -13,6 +13,31 @@ There are 3 problems this package is addressing:
 1. Peeking the current value is not intuitive and verbose.
 1. Syncing the value between multiple `writable`s is not easy.
 
+
+## Table of Contents
+
+1. [Installation                ](#installation)
+1. [Demo                        ](#demo)
+1. [Highlight                   ](#highlight)
+    1. [Previous tracking       ](#previous-tracking)
+    1. [Value syncing           ](#value-syncing)
+    1. [Simple getter           ](#simple-getter)
+    1. [Type-safety             ](#type-safety)
+1. [Usage                       ](#usage)
+    1. [`get`                   ](#get)
+    1. [`previous`              ](#previous)
+    1. [`isPersistent`          ](#ispersistent)
+    1. [`subscribe`             ](#subscribe)
+1. [Options                     ](#options)
+    1. [`trackerCount`          ](#trackercount)
+    1. [`key`                   ](#key)
+    1. [`isEqual`               ](#isequal)
+    1. [`forceFire`             ](#forcefire)
+    1. [`start`                 ](#start)
+    1. [`persist`               ](#persist)
+1. [Changelog                   ](#changelog)
+
+
 ## Installation
 
 ```bash
@@ -57,7 +82,7 @@ const store = writable(0, { trackerCount: 2 });
     penultimate,
   ] = store.previous;
 
-  store.subscribe((current, [last, penultimate]) => {});
+  store.subscribe((current, last, penultimate) => {});
 } // works
 
 {
@@ -67,7 +92,7 @@ const store = writable(0, { trackerCount: 2 });
     antepenultimate,
   ] = store.previous;
 
-  store.subscribe((current, [last, penultimate, antepenultimate]) => {});
+  store.subscribe((current, last, penultimate, antepenultimate) => {});
 } // ts(2493): Tuple type '[...]' of length '2' has no element at index '2'.
 ```
 
@@ -99,11 +124,17 @@ import { writable } from "better-svelte-writable";
 
 ## Usage
 
-The `writable` from this package is a drop-in replacement for the native writable. It provides some additional features which are listed below.
+The `writable` from this package is a drop-in replacement for the native writable.
+It provides some additional features which are listed below.
+By simply replace `svelte/store` with `better-svelte-writable` in import statement,
+you can unlock the power of this package.
 
-> Signature: `writable<T, N>(initialValue: T, options?: Options<T, N>): BetterWritable<T, N>`
+```diff
+- import { writable } from 'svelte/store';
++ import { writable } from 'better-svelte-writable';
+```
 
-> `writable(value as T)` is preferred so types can be inferred automatically.
+> `writable(value as T)` is preferred, so types can be inferred automatically.
 
 ```typescript
 import { writable } from 'better-svelte-writable';
@@ -119,6 +150,7 @@ const {
   // New members
   get,          // a  method for getting the current value without invoking the update
   previous,     // an tuple which contains tracked previous values that can be used a store
+                // only available when `trackerCount` is provided greater than 0
   isPersistent, // a  boolean value indicates whether the value is persisted in storage
 
   // Modified
@@ -148,6 +180,8 @@ Just like `Readable<T>` from `svelte/store`, the `BetterReadable<T>` object also
 By prefixing `$`, you can subscribe to the value changes.
 
 > The length of the tuple is determined by the `trackerCount` option.
+
+> Only when `trackerCount` is greater than 0, the `previous` will be available.
 
 ```svelte
 <script lang="ts">
@@ -183,18 +217,21 @@ console.log(store2.isPersistent); // false
 
 ### `subscribe`
 
-The native `subscribe` method has one major problem, which has no way to found the old value when the callback is invoked. So the `subscribe` method we provide gives you the ability to see the old value(s). The second optional argument takes in a tuple oldValues been tracked.
+The native `subscribe` method has one major problem, which has no way to found the old value
+when the callback is invoked. So the `subscribe` method we provide gives you the ability to
+see the old value(s). The first arg is the current value and followed by the previous values.
 
 > The length of the tuple is determined by the `trackerCount` option.
 
 ```typescript
 import { writable } from 'better-svelte-writable';
 
+
 const store = writable(0, { trackerCount: 1 });
 
-store.subscribe((newValue, [lastValue]) => {
-  console.log(lastValue);
-  console.log(newValue);
+store.subscribe((current, last) => {
+  console.log(last);
+  console.log(current);
 });
 ```
 
@@ -220,7 +257,7 @@ import { writable } from "better-svelte-writable";
 
 const store = writable(0, { trackerCount: 1 });
 
-store.subscribe((n, [last, penultimate]) =>
+store.subscribe((n, last, penultimate) =>
   console.log(last, penultimate));
 
 
@@ -273,7 +310,7 @@ type isEqualFunction = (currentValue: T, newValue: T) => boolean;
 ```
 
 `isEqual` is the function which been used to compare the previous value with the new value, which
-can be customized to fit your needs. This function will only be invoked when `forceFire` is `false`.
+can be customized to fit your needs.
 
 The default value of `isEqual` is `(currentValue, newValue) => currentValue === newValue`.
 
@@ -284,7 +321,7 @@ type forceFireOption = boolean;
 ```
 
 `forceFire` indicates whether the callbacks will be called even if the value is not changed.
-If this option is set to `true`, the equality check will be skipped.
+If this option is set to `true`, the equality result of `isEqual` will be ignored.
 
 The default value of `forceFire` is `false`.
 
@@ -364,7 +401,9 @@ interface Serializer<T> {
 };
 
 type persistOption<T> = boolean | {
+  schema    ?: ZodType;
   storage   ?: Storage;
+  overwrite ?: boolean;
   serializer?: Serializer<T>;
 };
 ```
@@ -386,8 +425,8 @@ which will be synced across tabs with the `writable`s with the same `key`.
 1. `serializer`: The serializer to be used.\
    The default value of `serializer` is `JSON`.
 
-1. `zodType`: The validator created with Zod.\
-   The default value of `zodType` is `undefined`.
+1. `schema`: The validator created with Zod.\
+   The default value of `schema` is `undefined`.
 
 1. `overwrite`: Whether the value in the storage will be overwritten when invalid.\
    &gt; `"always" ` Overwritten whenever storage value is invalid\
@@ -414,9 +453,25 @@ The default value of `persist` is `false`.
 
 # Changelog
 
+## 0.2.0
+
+### Fixes
+
+1. The documentations typos.
+1. Add table of contents in README.
+1. Do some formatting.
+1. Test route typo.
+
+### Breaking Changes
+
+1. The `subscribe` function signature is changed. Spread arguments is now
+   used to replace the old values tuple.
+1. The `previous` field will only be available when `trackerCount` is
+   greater than 0.
+
 ## 0.1.2
 
-### Change
+### Changes
 
 1. Add `Highlight` section in doc.
 1. Enhance the type inference.
