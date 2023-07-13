@@ -312,7 +312,7 @@ type isEqualFunction = (currentValue: T, newValue: T) => boolean;
 `isEqual` is the function which been used to compare the previous value with the new value, which
 can be customized to fit your needs.
 
-The default value of `isEqual` is `(currentValue, newValue) => currentValue === newValue`.
+The default value of `isEqual` is `(a, b) => !safe_not_equal(a, b)`.
 
 ### `forceFire`
 

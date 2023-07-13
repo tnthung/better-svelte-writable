@@ -100,7 +100,7 @@ export interface Serializer<T> {
 };
 
 
-const eq  = <T>(a: T, b: T) => a === b;
+const eq  = (a: any, b: any) => !(a != a ? b == b : a !== b || (a && typeof a === "object") || typeof a === "function");
 const nop = () => {};
 
 
