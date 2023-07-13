@@ -116,8 +116,8 @@ export const writable = <
   N extends number  = 0,
   S extends ZodType = never,
 > (
-  initialValue: z.infer<S> extends never ? T : z.infer<S>,
-  config      : WritableConfig<z.infer<S> extends never ? T : z.infer<S>, S, N> = {},
+  initialValue : z.infer<S> extends never ? T : z.infer<S>,
+  configuration: WritableConfig<z.infer<S> extends never ? T : z.infer<S>, S, N> = {},
 
 ): BetterWritable<z.infer<S> extends never ? T : z.infer<S>, N> => {
   // Actual type of the value
@@ -131,11 +131,11 @@ export const writable = <
     isEqual      = eq,
     forceFire    = false,
     trackerCount = 0,
-  } = config;
+  } = configuration;
 
   let {
     persist = false,
-  } = config;
+  } = configuration;
 
 
   // if key is provided, check if it's already in the map
