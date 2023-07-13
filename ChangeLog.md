@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2
+
+### Changes
+
+1. Split the `ChangeLog` part into a separate file.
+1. Use different default `isEqual` function matching the `safe_not_equal` in `svelte/store`.
+
+
 ## 0.2.1
 
 ### Fixes
