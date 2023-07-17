@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3
+
+### Fixes
+
+1. The `Zod` is not correctly installed as dependency.
+
+
 ## 0.2.2
 
 ### Changes

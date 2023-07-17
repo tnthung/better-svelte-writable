@@ -1,9 +1,9 @@
 {
 	"name": "better-svelte-writable",
 	"author": "TNThung",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"license": "MIT",
-  "homepage": "https://github.com/tnthung/better-svelte-writable",
+	"homepage": "https://github.com/tnthung/better-svelte-writable",
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
@@ -41,10 +41,12 @@
 		"svelte-check": "^3.4.3",
 		"tslib": "^2.4.1",
 		"typescript": "^5.0.0",
-		"vite": "^4.3.6",
-		"zod": "^3.21.4"
+		"vite": "^4.3.6"
 	},
 	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"zod": "^3.21.4"
+	}
 }
