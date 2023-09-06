@@ -79,18 +79,19 @@ export type WritableConfig<
 
 
 export type BetterReadable<T, N extends number = 0> = {
+  get      : () => T;
   subscribe: (this: void, run: Subscriber<T, N>, invalidate?: Invalidator<T>) => Unsubscriber;
 };
 
 
 export type BetterWritable<T, N extends number = 0> =
   BetterReadable<T, N> & {
-    get         : () => T;
     set         : (value: T) => void;
     update      : (updater: Updater<T>) => void;
+    toReadable  : () => BetterReadable<T, N>;
     isPersistent: boolean;
   } & (QuantifiedTuple<any, N> extends [] ? {} : {
-    previous    : QuantifiedTuple<BetterReadable<T, N>, N>;
+    previous  : QuantifiedTuple<BetterReadable<T, N>, N>;
   });
 
 
@@ -308,6 +309,7 @@ export const writable = <
     values     .push(initialValue);
     subscribers.push(new Set());
     trackers   .push({
+      get      : () => values[i],
       subscribe: (run, invalidate=nop) => {
         const sub: SITuple<AT, N> = [run, invalidate];
 
@@ -333,22 +335,29 @@ export const writable = <
             stop = null;
           }
         };
-      }
+      },
     });
   }
 
 
-  const store: BetterWritable<AT, N> = {
-    get         : () => values[0],
-    subscribe   : trackers[0].subscribe,
-    isPersistent: persist !== false,
+  const readable: BetterReadable<AT, N> = {
+    get      : () => values[0],
+    subscribe: trackers[0].subscribe,
+  };
 
-    set,
-    update,
+
+  const store: BetterWritable<AT, N> = {
+    ...readable,
 
     ...(trackerCount <= 0 ? {} : {
       previous  : trackers.slice(1),
     }),
+
+    set,
+    update,
+
+    toReadable  : () => readable,
+    isPersistent: persist !== false,
   };
 
 

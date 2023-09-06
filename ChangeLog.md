@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.4
+
+### New Features
+
+1. `toReadable` to convert a `BetterWritable` to a `BetterReadable` store.
+
+### Changes
+
+1. `get` method is now moved to `BetterReadable` object.
+
 ## 0.2.3
 
 ### Fixes
