@@ -26,6 +26,7 @@ There are 3 problems this package is addressing:
 1. [Usage                       ](#usage)
     1. [`get`                   ](#get)
     1. [`previous`              ](#previous)
+    1. [`toReadable`            ](#toreadable)
     1. [`isPersistent`          ](#ispersistent)
     1. [`subscribe`             ](#subscribe)
 1. [Options                     ](#options)
@@ -151,6 +152,7 @@ const {
   get,          // a  method for getting the current value without invoking the update
   previous,     // an tuple which contains tracked previous values that can be used a store
                 // only available when `trackerCount` is provided greater than 0
+  toReadable,   // a  method for converting the writable to a readable
   isPersistent, // a  boolean value indicates whether the value is persisted in storage
 
   // Modified
@@ -198,6 +200,21 @@ By prefixing `$`, you can subscribe to the value changes.
 <button on:click={() => $store++}>  +  </button>
 <button on:click={() => $store=0}>Reset</button>
 <button on:click={() => $store--}>  -  </button>
+```
+
+### `toReadable`
+
+The `toReadable` method is used to convert the `BetterWritable<T>` object to a `BetterReadable<T>`
+object. Which is a useful wrapper to discard the mutability and use the returned as a reference.
+
+```typescript
+import { writable } from 'better-svelte-writable';
+
+
+const store    = writable(0);
+const readable = store.toReadable();
+
+console.log(readable.get())
 ```
 
 ### `isPersistent`
