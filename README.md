@@ -74,7 +74,6 @@ The available previous tracker is strictly sized to `trackerCount`.
 ```typescript
 import { writable } from "better-svelte-writable";
 
-
 const store = writable(0, { trackerCount: 2 });
 
 {
@@ -97,11 +96,11 @@ const store = writable(0, { trackerCount: 2 });
 } // ts(2493): Tuple type '[...]' of length '2' has no element at index '2'.
 ```
 
-If you're using persistent writable, and the Zod schema is provided, the type of the value will be inferred from the schema.
+If you're using persistent writable, and the Zod schema is provided, the type of the value will be
+inferred from the schema.
 
 ```typescript
 import { writable } from "better-svelte-writable";
-
 
 {
   const store = writable(0, {
@@ -140,7 +139,6 @@ you can unlock the power of this package.
 ```typescript
 import { writable } from 'better-svelte-writable';
 
-
 const store = writable(0);
 
 const {
@@ -149,41 +147,48 @@ const {
   update,
 
   // New members
-  get,          // a  method for getting the current value without invoking the update
-  previous,     // an tuple which contains tracked previous values that can be used a store
+  get,          // a method for getting the current value without invoking the update
+  trackers,     // an tuple which contains tracked previous values that can be used a store
                 // only available when `trackerCount` is provided greater than 0
-  toReadable,   // a  method for converting the writable to a readable
-  isPersistent, // a  boolean value indicates whether the value is persisted in storage
+  previous,     // an tuple which contains the previous values
+  toReadable,   // a method for converting the writable to a readable
+  toComputed,   // a method for converting the writable to a computed
+  isPersistent, // a boolean value indicates whether the value is persisted in storage
 
   // Modified
-  subscribe,    // a  method for subscribing to the value changes
+  subscribe,    // a method for subscribing to the value changes
 } = writable(0);
+
+const {
+  get,          // members of BetterReadable<T> are simple wrappers for BetterWritable<T>
+  subscribe,    //
+  isPersistent, //
+} = store.toReadable();
 ```
 
 ### `get`
 
-The pain with the native `writable` is when you just need to peek the current value, the best you can do is through the `update` function and return the old value, or by using the provided `get` method in `svelte/store`. This is not only verbose but also not intuitive.
+The pain with the native `writable` is when you just need to peek the current value, the best you
+can do is through the `update` function and return the old value, or by using the provided `get`
+method in `svelte/store`. This is not only verbose but also not intuitive.
 
-The solution we provide is a native `get` method inside the return `BetterWritable<T>` object which is much straight forward and performance friendly.
+The solution we provide is a native `get` method inside the return `BetterWritable<T>` object which
+is much straight forward and performance friendly.
 
 ```typescript
 import { writable } from 'better-svelte-writable';
 
-
 const store = writable(0);
-
 console.log(store.get()); // 0
 ```
 
-### `previous`
+### `trackers`
 
-The `previous` is an tuple which contains the `BetterReadable<T>` objects holding the previous values.
-Just like `Readable<T>` from `svelte/store`, the `BetterReadable<T>` object also has a `subscribe` method.
-By prefixing `$`, you can subscribe to the value changes.
+The `trackers` is an tuple which contains the `BetterReadable<T>` objects holding the previous
+values. Just like `Readable<T>` from `svelte/store`, the `BetterReadable<T>` object also has a
+`subscribe` method. By prefixing `$`, you can subscribe to the value changes.
 
 > The length of the tuple is determined by the `trackerCount` option.
-
-> Only when `trackerCount` is greater than 0, the `previous` will be available.
 
 ```svelte
 <script lang="ts">
@@ -191,11 +196,33 @@ By prefixing `$`, you can subscribe to the value changes.
 
 
   const store = writable(0, { trackerCount: 1 });
-  const prev1 = store.previous[0];
+  const prev1 = store.trackers[0];
 </script>
 
 <div>Current : {$store}</div>
 <div>Previous: {$prev1}</div>
+
+<button on:click={() => $store++}>  +  </button>
+<button on:click={() => $store=0}>Reset</button>
+<button on:click={() => $store--}>  -  </button>
+```
+
+### `previous`
+
+The `previous` is an tuple which contains the previous values.
+
+> The length of the tuple is determined by the `trackerCount` option.
+
+```svelte
+<script lang="ts">
+  import { writable } from 'better-svelte-writable';
+
+  const store = writable(0, { trackerCount: 1 });
+  const prev1 = store.previous[0];
+</script>
+
+<div>Current : {$store}</div>
+<div>Previous: { prev1}</div>
 
 <button on:click={() => $store++}>  +  </button>
 <button on:click={() => $store=0}>Reset</button>
@@ -210,11 +237,24 @@ object. Which is a useful wrapper to discard the mutability and use the returned
 ```typescript
 import { writable } from 'better-svelte-writable';
 
-
 const store    = writable(0);
 const readable = store.toReadable();
 
 console.log(readable.get())
+```
+
+### `toComputed`
+
+The `toComputed` method is used to convert the `BetterWritable<T>` object to a `BetterReadable<T>`
+object. Which, when get or subscribe, will first compute the value from the function passed in.
+
+```typescript
+import { writable } from 'better-svelte-writable';
+
+const store    = writable(0);
+const computed = store.toComputed(n => n * 2);
+
+console.log(computed.get())
 ```
 
 ### `isPersistent`
@@ -263,7 +303,8 @@ store.subscribe((current, last) => {
 type trackerCountOption = number;
 ```
 
-`trackerCount` decides how many previous values will be tracked. If this option is set to `0`, the previous values will not be tracked.
+`trackerCount` decides how many previous values will be tracked. If this option is set to `0`, the
+previous values will not be tracked.
 
 The default value of `trackerCount` is `0`.
 
@@ -444,9 +485,9 @@ which will be synced across tabs with the `writable`s with the same `key`.
    The default value of `schema` is `undefined`.
 
 1. `overwrite`: Whether the value in the storage will be overwritten when invalid.\
-   &gt; `"always" ` Overwritten whenever storage value is invalid\
+   &gt; `"always" ` Overwritten whenever storage value is invalid then warn in console\
    &gt; `"initial"` Only overwrite when value is invalid on creation\
-   &gt; `"never"  ` Never overwrite\
+   &gt; `"never"  ` Never overwrite and throw error when value is invalid\
    The default value of `overwrite` is `"never"`.
 
 The default value of `persist` is `false`.
