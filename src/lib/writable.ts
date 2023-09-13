@@ -233,6 +233,22 @@ export class BetterWritable<T, N extends number=0> {
     return this.#isPersistent;
   }
 
+  public get key(): string | undefined {
+    return this.#key;
+  }
+
+  public get schema(): any | undefined {
+    return this.#schema;
+  }
+
+  public get overwrite(): OWOptions | undefined {
+    return this.#overwrite;
+  }
+
+  public get serializer(): Serializer<T> | undefined {
+    return this.#serializer;
+  }
+
   public get trackers(): QuantifiedTuple<BetterReadable<T, N>, N> {
     return [...this.#trackers.slice(1)] as QuantifiedTuple<BetterReadable<T, N>, N>;
   }
