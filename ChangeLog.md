@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0
+
+### Breaking Changes
+
+1. `previous` now returns the tuple of previous value instead of the readable store.
+1. `BetterWritable` is now rewritten as class to minimize the overhead.
+1. `BetterReadable` is now a interface instead of a type alias.
+1. `writable` function is now a factory function which returns a `BetterWritable` instance.
+1. `start` option is now renamed to `notifier`.
+1. `forceFire` option is now renamed to `forceEmit`.
+
+### New Features
+
+1. `trackers` returns the tuple of readable stores, just like old `previous`.
+1. `toComputed` to create a readable store which is first get computed from the writable store.
+
+
 ## 0.2.4
 
 ### New Features

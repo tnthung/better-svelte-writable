@@ -3,7 +3,7 @@
 
 
   const count = writable(0, { "trackerCount": 2 });
-  const { previous: [prev1] } = count;
+  const { trackers: [prev1] } = count;
 
 
   count.subscribe((n, o1, o2) =>

@@ -1,7 +1,7 @@
 {
 	"name": "better-svelte-writable",
 	"author": "TNThung",
-	"version": "0.2.4",
+	"version": "0.3.0",
 	"license": "MIT",
 	"homepage": "https://github.com/tnthung/better-svelte-writable",
 	"scripts": {
