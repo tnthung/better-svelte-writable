@@ -24,8 +24,8 @@ type QuantifiedTuple<T, N extends number, A extends T[] = []> =
       ? A["length"] extends U
         ? A
         : QuantifiedTuple<T, N, [T, ...A]>
-      : never
-    : never;
+      : []
+    : [];
 
 
 export type Subscriber<T, N extends number = 0> = IsPos<N> extends true
@@ -87,7 +87,7 @@ export type WritableConfig<
 
 
 type Queue = [((v: any) => void) | ((v: any, ...o: any[]) => void), any, any[]][]
-type Keyed = Map<string, BetterWritable<any, any>>
+type Keyed = Map<string, Writable<any, any>>
 
 
 // Utils
@@ -102,7 +102,9 @@ function EQ(a: any, b: any) {
 // Main
 const subCallbackQueue: Queue = [];
 
-export class BetterWritable<T, N extends number=0> {
+class Writable<T, N extends number=0>
+  implements BetterWritable<T, N>
+{
   #initialValue: T;
 
   #values      : T[]                    = [];
@@ -204,33 +206,31 @@ export class BetterWritable<T, N extends number=0> {
   }
 
   public toReadable(): BetterReadable<T, N> {
-    const self = this;
-
-    return {
-      get isPersistent() { return self.isPersistent },
-
-      get      : () => self.#values[0],
-      subscribe: (run, inv=NOP) =>
-        self.#trackers[0].subscribe(run, inv),
-    };
+    return Writable.createComputed(this, v => v);
   }
 
-  public toComputed<S>(f: (v: T) => S): BetterReadable<S, 0> {
-    const self = this;
-
-    return {
-      get isPersistent() { return self.isPersistent },
-
-      get      : () => f(self.#values[0]),
-      subscribe: (run, inv=NOP) =>
-        self.#trackers[0].subscribe(
-          (v : T, ..._: any) => run(f(v)),
-          (v?: T           ) => inv(v && f(v))),
-    };
+  public toComputed<S>(f: (v: T) => S): BetterReadable<S, N> {
+    return Writable.createComputed(this, f);
   }
 
   public get isPersistent(): boolean {
     return this.#isPersistent;
+  }
+
+  public get key(): string | undefined {
+    return this.#key;
+  }
+
+  public get schema(): any | undefined {
+    return this.#schema;
+  }
+
+  public get overwrite(): OWOptions | undefined {
+    return this.#overwrite;
+  }
+
+  public get serializer(): Serializer<T> | undefined {
+    return this.#serializer;
   }
 
   public get trackers(): QuantifiedTuple<BetterReadable<T, N>, N> {
@@ -358,7 +358,12 @@ export class BetterWritable<T, N extends number=0> {
       this.#subscribers.push(new Set());
       this.#values     .push(this.#initialValue);
       this.#trackers   .push({
-        get isPersistent() { return self.isPersistent },
+        get key         () { return self.key;          },
+        get schema      () { return self.schema;       },
+        get previous    () { return self.#values.slice(1) as QuantifiedTuple<T, N>; },
+        get overwrite   () { return self.overwrite;    },
+        get serializer  () { return self.serializer;   },
+        get isPersistent() { return self.isPersistent; },
 
         get      : () => this.#values[i],
         subscribe: (run, inv=NOP) => {
@@ -389,21 +394,89 @@ export class BetterWritable<T, N extends number=0> {
             }
           };
         },
+
+        toComputed<U>(f: (v: T) => U) {
+          return Writable.createComputed(this, v => f(v));
+        }
       });
+    }
+  }
+
+  private static createComputed<T, S, N extends number>(
+    r: BetterReadable<T, N>,
+    f: (v: T) => S,
+  ): BetterReadable<S, N> {
+    return {
+      get key         () { return r.key;               },
+      get schema      () { return r.schema;            },
+      get overwrite   () { return r.overwrite;         },
+      get isPersistent() { return r.isPersistent;      },
+
+      get previous    () { return r.previous.map(f) as QuantifiedTuple<S, N>; },
+      get serializer  () { return r.serializer      as Serializer<S> | undefined; },
+
+      get      : () => f(r.get()),
+      subscribe: (run, inv=NOP) =>
+        r.subscribe(
+          (v : T, ...a: any) => run(f(v), ...a.map(f)),
+          (v?: T           ) => inv(v && f(v))),
+
+      toComputed<U>(g: (v: S) => U) {
+        return Writable.createComputed(this, v => g(v));
+      }
+    };
+  }
+
+
+  public bounded(): BetterWritable<T, N> {
+    const self = this;
+
+    return {
+      get key         () { return self.key;          },
+      get schema      () { return self.schema;       },
+      get trackers    () { return self.trackers;     },
+      get previous    () { return self.previous;     },
+      get overwrite   () { return self.overwrite;    },
+      get serializer  () { return self.serializer;   },
+      get isPersistent() { return self.isPersistent; },
+
+      get       : self.get       .bind(self),
+      set       : self.set       .bind(self),
+      update    : self.update    .bind(self),
+      subscribe : self.subscribe .bind(self),
+      toComputed: self.toComputed.bind(self),
+      toReadable: self.toReadable.bind(self),
     }
   }
 }
 
 
 export interface BetterReadable<T, N extends number = 0> {
-  get      : () => T;
-  subscribe: (
+  get       : () => T;
+  toComputed: <S>(f: (v: T) => S) => BetterReadable<S, N>;
+  subscribe : (
     this       : void,
     run        : Subscriber<T, N>,
     invalidate?: Invalidator<T>
   ) => Unsubscriber;
 
+  get key         (): string | undefined;
+  get schema      (): any    | undefined;
+  get previous    (): QuantifiedTuple<T, N>;
+  get overwrite   (): OWOptions | undefined;
+  get serializer  (): Serializer<T> | undefined;
   get isPersistent(): boolean;
+}
+
+
+export interface BetterWritable<T, N extends number = 0>
+  extends BetterReadable<T, N>
+{
+  set       : (v: T) => void;
+  update    : (f: Updater<T>) => void;
+  toReadable: () => BetterReadable<T, N>;
+
+  get trackers(): QuantifiedTuple<BetterReadable<T, N>, N>;
 }
 
 
@@ -422,11 +495,13 @@ export function writable<
 
   // if key is provided, check if it's already in the map
   const { key } = configs;
-  if (key && keyedWritableMap.has(key))
-    return keyedWritableMap.get(key) as BetterWritable<AT, N>;
 
-  const writable = new BetterWritable<AT, N>(initial, configs);
-  if (key != null) keyedWritableMap.set(key, writable);
+  const writable: Writable<AT, N> =
+    (key && keyedWritableMap.get(key)) ||
+    new Writable<AT, N>(initial, configs);
 
-  return writable;
+  if (key && !keyedWritableMap.has(key))
+    keyedWritableMap.set(key, writable);
+
+  return writable.bounded();
 }
