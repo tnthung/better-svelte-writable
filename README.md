@@ -134,7 +134,8 @@ you can unlock the power of this package.
 + import { writable } from 'better-svelte-writable';
 ```
 
-> `writable(value as T)` is preferred, so types can be inferred automatically.
+> `writable(value as T)` is preferred over `writable<T>(value)`,
+> so types can be inferred automatically from schema.
 
 ```typescript
 import { writable } from 'better-svelte-writable';
@@ -153,17 +154,20 @@ const {
   previous,     // an tuple which contains the previous values
   toReadable,   // a method for converting the writable to a readable
   toComputed,   // a method for converting the writable to a computed
+
+  key,          // a getter for the key option
+  schema,       // a getter for the schema option
+  previous,     // an tuple which contains the previous values
+  overwrite,    // a getter for the overwrite option
+  serializer,   // a getter for the serializer option
   isPersistent, // a boolean value indicates whether the value is persisted in storage
 
   // Modified
   subscribe,    // a method for subscribing to the value changes
 } = writable(0);
 
-const {
-  get,          // members of BetterReadable<T> are simple wrappers for BetterWritable<T>
-  subscribe,    //
-  isPersistent, //
-} = store.toReadable();
+// The `set`, `update`, `trackers` & `toReadable` are absent in the `BetterReadable<T>` object,
+// rest of the members are exactly the same as the native `Readable<T>` object
 ```
 
 ### `get`
