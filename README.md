@@ -33,7 +33,7 @@ There are 3 problems this package is addressing:
     1. [`trackerCount`          ](#trackercount)
     1. [`key`                   ](#key)
     1. [`isEqual`               ](#isequal)
-    1. [`forceFire`             ](#forcefire)
+    1. [`forceEmit`             ](#forceEmit)
     1. [`start`                 ](#start)
     1. [`persist`               ](#persist)
 1. [Changelog                   ](#changelog)
@@ -42,7 +42,7 @@ There are 3 problems this package is addressing:
 ## Installation
 
 ```bash
-$ npm i -D better-svelte-writable
+$ npm i better-svelte-writable
 ```
 
 ## Demo
@@ -80,7 +80,7 @@ const store = writable(0, { trackerCount: 2 });
   const [
     last,
     penultimate,
-  ] = store.previous;
+  ] = store.trackers;
 
   store.subscribe((current, last, penultimate) => {});
 } // works
@@ -90,7 +90,7 @@ const store = writable(0, { trackerCount: 2 });
     last,
     penultimate,
     antepenultimate,
-  ] = store.previous;
+  ] = store.trackers;
 
   store.subscribe((current, last, penultimate, antepenultimate) => {});
 } // ts(2493): Tuple type '[...]' of length '2' has no element at index '2'.
@@ -222,7 +222,7 @@ The `previous` is an tuple which contains the previous values.
   import { writable } from 'better-svelte-writable';
 
   const store = writable(0, { trackerCount: 1 });
-  const prev1 = store.previous[0];
+  const prev1 = store.trackers[0];
 </script>
 
 <div>Current : {$store}</div>
@@ -323,8 +323,8 @@ store.subscribe((n, last, penultimate) =>
   console.log(last, penultimate));
 
 
-const last        = store.previous[0];
-const penultimate = store.previous[1];
+const last        = store.trackers[0];
+const penultimate = store.trackers[1];
 
 last       .subscribe(n => console.log("last"       , n));
 penultimate.subscribe(n => console.log("penultimate", n));
@@ -376,23 +376,23 @@ can be customized to fit your needs.
 
 The default value of `isEqual` is `(a, b) => !safe_not_equal(a, b)`.
 
-### `forceFire`
+### `forceEmit`
 
 ```typescript
-type forceFireOption = boolean;
+type forceEmitOption = boolean;
 ```
 
-`forceFire` indicates whether the callbacks will be called even if the value is not changed.
+`forceEmit` indicates whether the callbacks will be called even if the value is not changed.
 If this option is set to `true`, the equality result of `isEqual` will be ignored.
 
-The default value of `forceFire` is `false`.
+The default value of `forceEmit` is `false`.
 
 ```typescript
 import { writable } from 'better-svelte-writable';
 
 
 {
-  const store = writable(0, { forceFire: true });
+  const store = writable(0, { forceEmit: true });
 
   store.subscribe(() => console.log('fire'));
 
@@ -402,7 +402,7 @@ import { writable } from 'better-svelte-writable';
 }
 
 {
-  const store = writable(0, { forceFire: false });
+  const store = writable(0, { forceEmit: false });
 
   store.subscribe(() => console.log('fire'));
 
