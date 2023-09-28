@@ -206,11 +206,11 @@ class Writable<T, N extends number=0>
   }
 
   public toReadable(): BetterReadable<T, N> {
-    return Writable.createComputed(this);
+    return Writable.createComputed(this.bounded());
   }
 
   public toComputed<S>(f: (v: T) => S): BetterReadable<S, N> {
-    return Writable.createComputed(this, f);
+    return Writable.createComputed(this.bounded(), f);
   }
 
   public get isPersistent(): boolean {
@@ -407,22 +407,21 @@ class Writable<T, N extends number=0>
     f?: (v: T) => S,
   ): BetterReadable<S, N> {
     if (f) return {
-      get key         () { return r.key;               },
-      get schema      () { return r.schema;            },
-      get overwrite   () { return r.overwrite;         },
-      get isPersistent() { return r.isPersistent;      },
+      get key         () { return r.key;          },
+      get schema      () { return r.schema;       },
+      get overwrite   () { return r.overwrite;    },
+      get isPersistent() { return r.isPersistent; },
 
       get previous    () { return r.previous.map(f) as QuantifiedTuple<S, N>; },
       get serializer  () { return r.serializer      as Serializer<S> | undefined; },
 
       get      : () => f(r.get()),
-      subscribe: (run, inv=NOP) =>
-        r.subscribe(
-          (v : T, ...a: any) => run(f(v), ...a.map(f)),
-          (v?: T           ) => inv(v && f(v))),
+      subscribe: (run, inv=NOP) => r.subscribe(
+        (v : T, ...a: any) => run(f(v), ...a.map(f)),
+        (v?: T           ) => inv(v && f(v))),
 
       toComputed<U>(g: (v: S) => U) {
-        return Writable.createComputed(this, v => g(v));
+        return Writable.createComputed(this, g);
       }
     };
 
