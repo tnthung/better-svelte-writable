@@ -206,11 +206,11 @@ class Writable<T, N extends number=0>
   }
 
   public toReadable(): BetterReadable<T, N> {
-    return Writable.createComputed(this);
+    return Writable.createComputed(this.bounded());
   }
 
   public toComputed<S>(f: (v: T) => S): BetterReadable<S, N> {
-    return Writable.createComputed(this, f);
+    return Writable.createComputed(this.bounded(), f);
   }
 
   public get isPersistent(): boolean {
