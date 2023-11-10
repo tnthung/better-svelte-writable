@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.4
+
+### New Features
+
+1. `initiator` option is added that will be called when the store finished initialization.
+
+
 ## 0.3.1
 
 ### Breaking Changes
@@ -15,6 +22,7 @@
 1. `toComputed` to create a readable store with given function that computes the value.
 
 ### Changes
+
 1. `writable` is now a simple factory function wrapping around `BetterWritable` class.
 1. `BetterWritable` is now a interface instead of a type alias.
 1. `BetterReadable` is now a interface instead of a type alias.

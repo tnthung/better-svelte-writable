@@ -66,6 +66,7 @@ export type WritableConfig<
 > = {
   isEqual     ?: (a: T, b: T) => boolean;
   notifier    ?: StartStopNotifier<T>;
+  initiator   ?: (v: T) => void;
   forceEmit   ?: boolean;
   trackerCount?: N;
 
@@ -144,6 +145,9 @@ class Writable<T, N extends number=0>
     // initial setup
     this.setupPersist(initial, configs.persist ?? false);
     this.setupTracker();
+
+    // call the initiator
+    configs.initiator?.(initial);
   }
 
 
