@@ -88,13 +88,17 @@ export type WritableConfig<
 
 
 export interface BetterReadable<T, N extends number = 0> {
-  get       : () => T;
-  toComputed: <S>(f: (v: T) => S) => BetterReadable<S, N>;
-  subscribe : (
+  on: (value: T, cb: (v: T) => void) => Unsubscriber;
+
+  get: () => T;
+
+  subscribe: (
     this       : void,
     run        : Subscriber<T, N>,
     invalidate?: Invalidator<T>
   ) => Unsubscriber;
+
+  toComputed: <S>(f: (v: T) => S) => BetterReadable<S, N>;
 
   key         : string        | undefined;
   schema      : any           | undefined;
@@ -376,6 +380,10 @@ export function writable<
     };
   }
 
+  function on(value: AT, cb: (v: AT) => void) {
+    return subscribe((v: AT, ..._: any) =>
+      isEqual(v, value) && cb(v));
+  }
 
   configs.initiator?.(present);
 
@@ -387,6 +395,7 @@ export function writable<
 
     trackers: previous.map(p => p.toReadable()) as QuantifiedTuple<BetterReadable<AT>, N>,
 
+    on,
     set,
     update,
     subscribe,
