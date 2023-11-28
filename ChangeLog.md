@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1
+
+### New Features
+
+1. `on` method is added for subscribing to the store with specific value.
+
+
 ## 0.4.0
 
 ### Changes
