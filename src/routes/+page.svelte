@@ -1,8 +1,8 @@
 <script context="module" lang="ts">
-  import { writable } from "$lib/writable.js";
+  import { writable } from "$lib/index.js";
 
 
-  const count = writable(0, { "trackerCount": 2 });
+  const count = writable(0, { trackerCount: 2 });
   const { trackers: [prev1] } = count;
 
 

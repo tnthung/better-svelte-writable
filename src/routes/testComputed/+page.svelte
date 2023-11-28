@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { writable } from "$lib/writable.js";
+  import { writable } from "$lib/index.js";
 
   const count1 = writable(0);
 

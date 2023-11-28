@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+### Changes
+
+1. Rewrite using factory functions instead of classes. (Should have no breaking changes)
+1. Using the recursive function to create trackers.
+
+
 ## 0.3.4
 
 ### New Features
