@@ -289,11 +289,8 @@ export function writable<
 
   // setup all trackers
   for (let i = 0; i < trackerCount; i++)
-    previous.push(writable(initial, {
-      isEqual,
-      notifier,
-      forceEmit,
-    }));
+    previous.push(writable(initial,
+      { isEqual, notifier, forceEmit }));
 
   function set(v: AT) {
     // check if value is changed
