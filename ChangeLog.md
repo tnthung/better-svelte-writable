@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.2
+
+### Breaking Changes
+
+1. `trackers` no longer exists. Use `previous` instead.
+1. `previous` now returns the tuple of readable stores instead of the tuple of previous value.
+
+
 ## 0.4.1
 
 ### New Features

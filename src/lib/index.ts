@@ -106,6 +106,8 @@ export interface BetterReadable<T, N extends number = 0> {
   overwrite   : OWOptions     | undefined;
   serializer  : Serializer<T> | undefined;
   isPersistent: boolean;
+
+  previous: QuantifiedTuple<BetterReadable<T, N>, N>;
 }
 
 
@@ -115,9 +117,6 @@ export interface BetterWritable<T, N extends number = 0>
   set       : (v: T) => void;
   update    : (f: Updater<T>) => void;
   toReadable: () => BetterReadable<T, N>;
-
-  previous: () => QuantifiedTuple<T, N>;
-  trackers: QuantifiedTuple<BetterReadable<T, N>, N>;
 }
 
 
@@ -156,8 +155,6 @@ function createComputed<T, N extends number, S=T>(
 
     delete (tmp as DEL).set       ;
     delete (tmp as DEL).update    ;
-    delete (tmp as DEL).trackers  ;
-    delete (tmp as DEL).previous  ;
     delete (tmp as DEL).toReadable;
   }
 
@@ -389,11 +386,10 @@ export function writable<
 
   const tmp: BetterWritable<AT, N> = {
     get       : () => present,
-    previous  : () => previous.map(p => p.get()) as QuantifiedTuple<AT, N>,
     toReadable: () => createComputed(tmp),
     toComputed: <S>(f: (v: AT) => S) => createComputed(tmp, f),
 
-    trackers: previous.map(p => p.toReadable()) as QuantifiedTuple<BetterReadable<AT>, N>,
+    previous: previous.map(p => p.toReadable()) as QuantifiedTuple<BetterReadable<AT>, N>,
 
     on,
     set,
