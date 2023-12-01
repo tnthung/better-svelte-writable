@@ -28,9 +28,8 @@ type QuantifiedTuple<T, N extends number, A extends T[] = []> =
     : [];
 
 
-export type Subscriber<T, N extends number = 0> = IsPos<N> extends true
-  ? (value: T, ...prevs: QuantifiedTuple<T, N>) => void
-  : (value: T                                 ) => void;
+export type Subscriber<T, N extends number = 0> =
+  (value: T, ...prevs: QuantifiedTuple<T, N>) => void;
 
 
 export type StartStopNotifier<T> = (
@@ -40,7 +39,7 @@ export type StartStopNotifier<T> = (
 
 
 // stolen from svelte/store's private types "SubscribeInvalidateTuple<T>" :D
-type SITuple<T, N extends number> = [Subscriber<T, N>, Invalidator<T>];
+type SITuple<T> = [Subscriber<T, number>, Invalidator<T>];
 
 
 export type Serializer<T> = {
@@ -106,6 +105,8 @@ export interface BetterReadable<T, N extends number = 0> {
   overwrite   : OWOptions     | undefined;
   serializer  : Serializer<T> | undefined;
   isPersistent: boolean;
+
+  previous: QuantifiedTuple<BetterReadable<T, 0>, N>;
 }
 
 
@@ -115,9 +116,6 @@ export interface BetterWritable<T, N extends number = 0>
   set       : (v: T) => void;
   update    : (f: Updater<T>) => void;
   toReadable: () => BetterReadable<T, N>;
-
-  previous: () => QuantifiedTuple<T, N>;
-  trackers: QuantifiedTuple<BetterReadable<T, N>, N>;
 }
 
 
@@ -156,8 +154,6 @@ function createComputed<T, N extends number, S=T>(
 
     delete (tmp as DEL).set       ;
     delete (tmp as DEL).update    ;
-    delete (tmp as DEL).trackers  ;
-    delete (tmp as DEL).previous  ;
     delete (tmp as DEL).toReadable;
   }
 
@@ -188,7 +184,7 @@ export function writable<
   let present = initial as AT;
 
   const previous    = []        as BetterWritable<AT>[];
-  const subscribers = new Set() as Set<SITuple<AT, 0>>;
+  const subscribers = new Set() as Set<SITuple<AT>>;
 
   const key          = configs.key;
   const isEqual      = configs.isEqual      ?? EQ    as (a: AT, b: AT) => boolean;
@@ -293,11 +289,8 @@ export function writable<
 
   // setup all trackers
   for (let i = 0; i < trackerCount; i++)
-    previous.push(writable(initial, {
-      isEqual,
-      notifier,
-      forceEmit,
-    }));
+    previous.push(writable(initial,
+      { isEqual, notifier, forceEmit }));
 
   function set(v: AT) {
     // check if value is changed
@@ -355,7 +348,7 @@ export function writable<
     run : Subscriber <AT, N>,
     inv?: Invalidator<AT>,
   ) {
-    const sub: SITuple<AT, 0> = [run as any, inv ?? NOP];
+    const sub: SITuple<AT> = [run, inv ?? NOP];
 
     // add the subscriber
     subscribers.add(sub);
@@ -389,11 +382,10 @@ export function writable<
 
   const tmp: BetterWritable<AT, N> = {
     get       : () => present,
-    previous  : () => previous.map(p => p.get()) as QuantifiedTuple<AT, N>,
     toReadable: () => createComputed(tmp),
     toComputed: <S>(f: (v: AT) => S) => createComputed(tmp, f),
 
-    trackers: previous.map(p => p.toReadable()) as QuantifiedTuple<BetterReadable<AT>, N>,
+    previous: previous.map(p => p.toReadable()) as QuantifiedTuple<BetterReadable<AT>, N>,
 
     on,
     set,
